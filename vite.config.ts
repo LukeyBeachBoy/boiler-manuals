@@ -9,6 +9,5 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // For GitHub Pages — change 'boiler-manuals' to your repo name
-  // base: '/boiler-manuals/',
+  base: '/boiler-manuals/',
 });

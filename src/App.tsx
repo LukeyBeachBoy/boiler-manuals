@@ -8,7 +8,7 @@ import { ModelDetailPage } from './pages/ModelDetail';
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/boiler-manuals">
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
