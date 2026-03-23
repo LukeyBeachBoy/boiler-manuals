@@ -1,0 +1,1 @@
+export { ManufacturerList } from './ManufacturerList';

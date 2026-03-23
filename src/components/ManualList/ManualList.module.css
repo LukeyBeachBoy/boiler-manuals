@@ -1,0 +1,182 @@
+.heading {
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.error {
+  background: #fef2f2;
+  color: var(--color-danger);
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  border: 1px solid #fecaca;
+  margin-bottom: 16px;
+}
+
+.uploadForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+
+.input {
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.input:focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.fileInput {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.variantSelect {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.variantLabel {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.variantChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  transition: all var(--transition);
+}
+
+.chip:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.chipActive {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.chipActive:hover {
+  background: var(--color-primary-hover);
+  color: white;
+}
+
+.uploadBtn {
+  padding: 8px 16px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--radius);
+  font-weight: 600;
+  font-size: 14px;
+  align-self: flex-start;
+  transition: background var(--transition);
+}
+
+.uploadBtn:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.uploadBtn:disabled {
+  opacity: 0.5;
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: var(--color-surface);
+}
+
+.manualInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.manualTitle {
+  background: none;
+  padding: 0;
+  font-weight: 500;
+  font-size: 14px;
+  color: var(--color-primary);
+  text-align: left;
+  transition: color var(--transition);
+}
+
+.manualTitle:hover {
+  color: var(--color-primary-hover);
+}
+
+.meta {
+  display: flex;
+  gap: 12px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.size {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+}
+
+.covers {
+  font-style: italic;
+}
+
+.deleteBtn {
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  transition: all var(--transition);
+}
+
+.deleteBtn:hover {
+  background: #fef2f2;
+  color: var(--color-danger);
+}
+
+.empty {
+  text-align: center;
+  color: var(--color-text-secondary);
+  padding: 32px 0;
+  font-size: 14px;
+}

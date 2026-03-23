@@ -1,0 +1,37 @@
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.crumb {
+  color: var(--color-text-secondary);
+  transition: color var(--transition);
+}
+
+.crumb:hover {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.sep {
+  color: var(--color-text-secondary);
+}
+
+.current {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.heading {
+  font-size: 24px;
+  margin-bottom: 32px;
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
