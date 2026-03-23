@@ -5,6 +5,7 @@ import { LoginPage } from './pages/Login';
 import { DashboardPage } from './pages/Dashboard';
 import { ManufacturerDetailPage } from './pages/ManufacturerDetail';
 import { ModelDetailPage } from './pages/ModelDetail';
+import { SearchPage } from './pages/Search';
 
 export default function App() {
   return (
@@ -19,6 +20,7 @@ export default function App() {
           }
         >
           <Route path="/" element={<DashboardPage />} />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/manufacturer/:id" element={<ManufacturerDetailPage />} />
           <Route path="/model/:id" element={<ModelDetailPage />} />
         </Route>
