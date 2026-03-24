@@ -50,8 +50,13 @@ export const ManualList = observer(function ManualList({ modelId }: ManualListPr
   };
 
   const handleDownload = async (filePath: string) => {
+    const newWindow = window.open('', '_blank');
     const url = await getManualSignedUrl(filePath);
-    if (url) window.open(url, '_blank');
+    if (url && newWindow) {
+      newWindow.location.href = url;
+    } else {
+      newWindow?.close();
+    }
   };
 
   const toggleVariant = (id: string) => {
