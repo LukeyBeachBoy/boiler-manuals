@@ -72,10 +72,17 @@
 }
 
 .name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-weight: 500;
   font-size: 14px;
   color: var(--color-text);
   transition: color var(--transition);
+}
+
+.pdfIcon {
+  flex-shrink: 0;
 }
 
 .name:hover {

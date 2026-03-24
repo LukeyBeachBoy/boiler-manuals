@@ -1,39 +1,13 @@
-export interface Manufacturer {
-  id: string;
-  name: string;
-  created_at: string;
-}
+import type { Tables } from './supabase';
 
-export interface Model {
-  id: string;
-  manufacturer_id: string;
-  name: string;
-  created_at: string;
-}
+// Base types derived from generated Supabase schema
+export type Manufacturer = Tables<'manufacturers'>;
+export type Model = Tables<'models'>;
+export type Variant = Tables<'variants'>;
+export type Manual = Tables<'manuals'>;
+export type ManualVariant = Tables<'manual_variants'>;
 
-export interface Variant {
-  id: string;
-  model_id: string;
-  name: string;
-  gc_number: string;
-  created_at: string;
-}
-
-export interface Manual {
-  id: string;
-  model_id: string;
-  title: string;
-  file_path: string;
-  file_size: number | null;
-  created_at: string;
-}
-
-export interface ManualVariant {
-  manual_id: string;
-  variant_id: string;
-}
-
-// Extended types with relations
+// Extended types with relations (used in detail views)
 export interface ModelWithRelations extends Model {
   variants?: Variant[];
   manuals?: ManualWithVariants[];

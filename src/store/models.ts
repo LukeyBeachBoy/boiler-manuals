@@ -2,8 +2,11 @@ import { observable } from '@legendapp/state';
 import { supabase } from '../lib/supabase';
 import type { Model, ModelWithRelations } from '../types/database';
 
+// Model enriched with aggregated manual count from Supabase join
+type ModelWithManualCount = Model & { manuals: { count: number }[] };
+
 interface ModelsState {
-  items: Model[];
+  items: ModelWithManualCount[];
   current: ModelWithRelations | null;
   loading: boolean;
   error: string | null;
@@ -22,7 +25,7 @@ export async function fetchModelsByManufacturer(manufacturerId: string) {
 
   const { data, error } = await supabase
     .from('models')
-    .select('*')
+    .select('*, manuals(count)')
     .eq('manufacturer_id', manufacturerId)
     .order('name');
 
@@ -76,7 +79,7 @@ export async function createModel(manufacturerId: string, name: string): Promise
     return null;
   }
 
-  models$.items.set((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+  models$.items.set((prev) => [...prev, { ...data, manuals: [{ count: 0 }] }].sort((a, b) => a.name.localeCompare(b.name)));
   return data;
 }
 

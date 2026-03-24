@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { observer } from '@legendapp/state/react';
+import { useEffect } from 'react';
+import { useObservable, useValue } from '@legendapp/state/react';
 import { Link } from 'react-router-dom';
 import {
   models$,
@@ -15,15 +15,21 @@ interface ModelListProps {
   manufacturerId: string;
 }
 
-export const ModelList = observer(function ModelList({ manufacturerId }: ModelListProps) {
-  const items = models$.items.get();
-  const loading = models$.loading.get();
-  const error = models$.error.get();
+export function ModelList({ manufacturerId }: ModelListProps) {
+  const items = useValue(models$.items);
+  const loading = useValue(models$.loading);
+  const error = useValue(models$.error);
 
-  const [newName, setNewName] = useState('');
-  const [editId, setEditId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const local$ = useObservable({
+    newName: '',
+    editId: null as string | null,
+    editName: '',
+    deleteId: null as string | null,
+  });
+  const newName = useValue(local$.newName);
+  const editId = useValue(local$.editId);
+  const editName = useValue(local$.editName);
+  const deleteId = useValue(local$.deleteId);
 
   useEffect(() => {
     fetchModelsByManufacturer(manufacturerId);
@@ -33,20 +39,20 @@ export const ModelList = observer(function ModelList({ manufacturerId }: ModelLi
     e.preventDefault();
     if (!newName.trim()) return;
     await createModel(manufacturerId, newName);
-    setNewName('');
+    local$.newName.set('');
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editId || !editName.trim()) return;
     await updateModel(editId, editName);
-    setEditId(null);
+    local$.editId.set(null);
   };
 
   const handleDelete = async () => {
     if (!deleteId) return;
     await deleteModel(deleteId);
-    setDeleteId(null);
+    local$.deleteId.set(null);
   };
 
   const deleteTarget = items.find((m) => m.id === deleteId);
@@ -61,7 +67,7 @@ export const ModelList = observer(function ModelList({ manufacturerId }: ModelLi
         <input
           type="text"
           value={newName}
-          onChange={(e) => setNewName(e.target.value)}
+          onChange={(e) => local$.newName.set(e.target.value)}
           placeholder="Add model..."
           className={styles.input}
         />
@@ -83,14 +89,14 @@ export const ModelList = observer(function ModelList({ manufacturerId }: ModelLi
                   <input
                     type="text"
                     value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
+                    onChange={(e) => local$.editName.set(e.target.value)}
                     className={styles.input}
                     autoFocus
                   />
                   <button type="submit" className={styles.saveBtn}>Save</button>
                   <button
                     type="button"
-                    onClick={() => setEditId(null)}
+                    onClick={() => local$.editId.set(null)}
                     className={styles.cancelBtn}
                   >
                     Cancel
@@ -100,16 +106,29 @@ export const ModelList = observer(function ModelList({ manufacturerId }: ModelLi
                 <>
                   <Link to={`/model/${m.id}`} className={styles.name}>
                     {m.name}
+                    {m.manuals?.[0]?.count > 0 && (
+                      <svg
+                        className={styles.pdfIcon}
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        aria-label="Has PDF manuals"
+                      >
+                        <path d="M4 1h5.5L13 4.5V13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2Z" fill="#e74c3c" opacity="0.15" stroke="#e74c3c" strokeWidth="1.2" />
+                        <text x="6.5" y="11.5" textAnchor="middle" fontSize="5" fontWeight="700" fill="#e74c3c">PDF</text>
+                      </svg>
+                    )}
                   </Link>
                   <div className={styles.actions}>
                     <button
-                      onClick={() => { setEditId(m.id); setEditName(m.name); }}
+                      onClick={() => { local$.editId.set(m.id); local$.editName.set(m.name); }}
                       className={styles.editBtn}
                     >
                       Edit
                     </button>
                     <button
-                      onClick={() => setDeleteId(m.id)}
+                      onClick={() => local$.deleteId.set(m.id)}
                       className={styles.deleteBtn}
                     >
                       Delete
@@ -127,8 +146,8 @@ export const ModelList = observer(function ModelList({ manufacturerId }: ModelLi
         title="Delete Model"
         message={`Delete "${deleteTarget?.name}"? This will also delete all its variants and manuals.`}
         onConfirm={handleDelete}
-        onCancel={() => setDeleteId(null)}
+        onCancel={() => local$.deleteId.set(null)}
       />
     </div>
   );
-});
+}
