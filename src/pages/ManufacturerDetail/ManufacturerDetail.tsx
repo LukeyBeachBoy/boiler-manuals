@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useObservable, useValue } from '@legendapp/state/react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { ModelList } from '../../components/ModelList';
@@ -7,7 +8,8 @@ import styles from './ManufacturerDetail.module.css';
 
 export function ManufacturerDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [manufacturer, setManufacturer] = useState<Manufacturer | null>(null);
+  const manufacturer$ = useObservable<Manufacturer | null>(null);
+  const manufacturer = useValue(manufacturer$);
 
   useEffect(() => {
     if (!id) return;
@@ -16,7 +18,7 @@ export function ManufacturerDetailPage() {
       .select('*')
       .eq('id', id)
       .single()
-      .then(({ data }) => setManufacturer(data));
+      .then(({ data }) => manufacturer$.set(data));
   }, [id]);
 
   if (!id) return null;

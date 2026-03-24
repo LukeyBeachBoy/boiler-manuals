@@ -1,12 +1,12 @@
-import { observer } from '@legendapp/state/react';
+import { useValue } from '@legendapp/state/react';
 import { Navigate } from 'react-router-dom';
 import { auth$ } from '../../store/auth';
 import { LoginForm } from '../../components/LoginForm';
 import styles from './Login.module.css';
 
-export const LoginPage = observer(function LoginPage() {
-  const user = auth$.user.get();
-  const loading = auth$.loading.get();
+export function LoginPage() {
+  const user = useValue(auth$.user);
+  const loading = useValue(auth$.loading);
 
   if (loading) return null;
   if (user) return <Navigate to="/" replace />;
@@ -16,4 +16,4 @@ export const LoginPage = observer(function LoginPage() {
       <LoginForm />
     </div>
   );
-});
+}

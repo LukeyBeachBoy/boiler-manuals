@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
-import { observer } from '@legendapp/state/react';
+import { useEffect, useRef, useState } from 'react';
+import { useObservable, useValue, Show } from '@legendapp/state/react';
+import { $React } from '@legendapp/state/react-web';
 import {
   manuals$,
   fetchManualsByModel,
@@ -16,17 +17,20 @@ interface ManualListProps {
   modelId: string;
 }
 
-export const ManualList = observer(function ManualList({ modelId }: ManualListProps) {
-  const items = manuals$.items.get();
-  const variants = variants$.items.get();
-  const loading = manuals$.loading.get();
-  const uploading = manuals$.uploading.get();
-  const error = manuals$.error.get();
+export function ManualList({ modelId }: ManualListProps) {
+  const items = useValue(manuals$.items);
+  const variants = useValue(variants$.items);
+  const loading = useValue(manuals$.loading);
+  const uploading = useValue(manuals$.uploading);
+  const error = useValue(manuals$.error);
 
-  const [title, setTitle] = useState('');
+  // File objects have non-serializable methods — keep as useState
   const [file, setFile] = useState<File | null>(null);
-  const [selectedVariants, setSelectedVariants] = useState<string[]>([]);
-  const [deleteTarget, setDeleteTarget] = useState<Manual | null>(null);
+  const local$ = useObservable({
+    title: '',
+    selectedVariants: [] as string[],
+    deleteTarget: null as Manual | null,
+  });
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -35,18 +39,20 @@ export const ManualList = observer(function ManualList({ modelId }: ManualListPr
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
+    const title = local$.title.get();
     if (!title.trim() || !file) return;
-    await uploadManual(modelId, title, file, selectedVariants);
-    setTitle('');
+    await uploadManual(modelId, title, file, local$.selectedVariants.get());
+    local$.title.set('');
     setFile(null);
-    setSelectedVariants([]);
+    local$.selectedVariants.set([]);
     if (fileRef.current) fileRef.current.value = '';
   };
 
   const handleDelete = async () => {
-    if (!deleteTarget) return;
-    await deleteManual(deleteTarget);
-    setDeleteTarget(null);
+    const target = local$.deleteTarget.get();
+    if (!target) return;
+    await deleteManual(target);
+    local$.deleteTarget.set(null);
   };
 
   const handleDownload = async (filePath: string) => {
@@ -60,7 +66,7 @@ export const ManualList = observer(function ManualList({ modelId }: ManualListPr
   };
 
   const toggleVariant = (id: string) => {
-    setSelectedVariants((prev) =>
+    local$.selectedVariants.set((prev) =>
       prev.includes(id) ? prev.filter((v) => v !== id) : [...prev, id]
     );
   };
@@ -78,10 +84,9 @@ export const ManualList = observer(function ManualList({ modelId }: ManualListPr
       {error && <div className={styles.error}>{error}</div>}
 
       <form onSubmit={handleUpload} className={styles.uploadForm}>
-        <input
+        <$React.input
           type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          $value={local$.title}
           placeholder="Manual title..."
           className={styles.input}
         />
@@ -97,25 +102,27 @@ export const ManualList = observer(function ManualList({ modelId }: ManualListPr
             <span className={styles.variantLabel}>Covers variants:</span>
             <div className={styles.variantChips}>
               {variants.map((v) => (
-                <button
+                <$React.button
                   key={v.id}
                   type="button"
-                  className={`${styles.chip} ${selectedVariants.includes(v.id) ? styles.chipActive : ''}`}
+                  $className={() =>
+                    `${styles.chip} ${local$.selectedVariants.get().includes(v.id) ? styles.chipActive : ''}`
+                  }
                   onClick={() => toggleVariant(v.id)}
                 >
                   {v.name}
-                </button>
+                </$React.button>
               ))}
             </div>
           </div>
         )}
-        <button
+        <$React.button
           type="submit"
           className={styles.uploadBtn}
-          disabled={!title.trim() || !file || uploading}
+          $disabled={() => !local$.title.get().trim() || !file || uploading}
         >
           {uploading ? 'Uploading...' : 'Upload Manual'}
-        </button>
+        </$React.button>
       </form>
 
       {loading && items.length === 0 ? (
@@ -149,7 +156,7 @@ export const ManualList = observer(function ManualList({ modelId }: ManualListPr
                 </div>
               </div>
               <button
-                onClick={() => setDeleteTarget(m)}
+                onClick={() => local$.deleteTarget.set(m)}
                 className={styles.deleteBtn}
               >
                 Delete
@@ -159,13 +166,20 @@ export const ManualList = observer(function ManualList({ modelId }: ManualListPr
         </ul>
       )}
 
-      <ConfirmDialog
-        open={!!deleteTarget}
-        title="Delete Manual"
-        message={`Delete "${deleteTarget?.title}"? The PDF file will also be removed.`}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteTarget(null)}
-      />
+      <Show if={() => !!local$.deleteTarget.get()}>
+        {() => {
+          const target = local$.deleteTarget.get();
+          return (
+            <ConfirmDialog
+              open={true}
+              title="Delete Manual"
+              message={`Delete "${target?.title}"? The PDF file will also be removed.`}
+              onConfirm={handleDelete}
+              onCancel={() => local$.deleteTarget.set(null)}
+            />
+          );
+        }}
+      </Show>
     </div>
   );
-});
+}

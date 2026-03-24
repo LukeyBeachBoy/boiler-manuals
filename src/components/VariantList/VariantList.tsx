@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { observer } from '@legendapp/state/react';
+import { useEffect } from 'react';
+import { useObservable, useValue, Show } from '@legendapp/state/react';
+import { $React } from '@legendapp/state/react-web';
 import {
   variants$,
   fetchVariantsByModel,
@@ -14,17 +15,19 @@ interface VariantListProps {
   modelId: string;
 }
 
-export const VariantList = observer(function VariantList({ modelId }: VariantListProps) {
-  const items = variants$.items.get();
-  const loading = variants$.loading.get();
-  const error = variants$.error.get();
+export function VariantList({ modelId }: VariantListProps) {
+  const items = useValue(variants$.items);
+  const loading = useValue(variants$.loading);
+  const error = useValue(variants$.error);
 
-  const [newName, setNewName] = useState('');
-  const [newGc, setNewGc] = useState('');
-  const [editId, setEditId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
-  const [editGc, setEditGc] = useState('');
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const local$ = useObservable({
+    newName: '',
+    newGc: '',
+    editId: null as string | null,
+    editName: '',
+    editGc: '',
+    deleteId: null as string | null,
+  });
 
   useEffect(() => {
     fetchVariantsByModel(modelId);
@@ -32,26 +35,30 @@ export const VariantList = observer(function VariantList({ modelId }: VariantLis
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim() || !newGc.trim()) return;
-    await createVariant(modelId, newName, newGc);
-    setNewName('');
-    setNewGc('');
+    const name = local$.newName.get();
+    const gc = local$.newGc.get();
+    if (!name.trim() || !gc.trim()) return;
+    await createVariant(modelId, name, gc);
+    local$.newName.set('');
+    local$.newGc.set('');
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editId || !editName.trim() || !editGc.trim()) return;
-    await updateVariant(editId, editName, editGc);
-    setEditId(null);
+    const id = local$.editId.get();
+    const name = local$.editName.get();
+    const gc = local$.editGc.get();
+    if (!id || !name.trim() || !gc.trim()) return;
+    await updateVariant(id, name, gc);
+    local$.editId.set(null);
   };
 
   const handleDelete = async () => {
-    if (!deleteId) return;
-    await deleteVariant(deleteId);
-    setDeleteId(null);
+    const id = local$.deleteId.get();
+    if (!id) return;
+    await deleteVariant(id);
+    local$.deleteId.set(null);
   };
-
-  const deleteTarget = items.find((v) => v.id === deleteId);
 
   return (
     <div>
@@ -60,27 +67,25 @@ export const VariantList = observer(function VariantList({ modelId }: VariantLis
       {error && <div className={styles.error}>{error}</div>}
 
       <form onSubmit={handleCreate} className={styles.addForm}>
-        <input
+        <$React.input
           type="text"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
+          $value={local$.newName}
           placeholder="Variant name..."
           className={styles.input}
         />
-        <input
+        <$React.input
           type="text"
-          value={newGc}
-          onChange={(e) => setNewGc(e.target.value)}
+          $value={local$.newGc}
           placeholder="GC number..."
           className={styles.inputSmall}
         />
-        <button
+        <$React.button
           type="submit"
           className={styles.addBtn}
-          disabled={!newName.trim() || !newGc.trim()}
+          $disabled={() => !local$.newName.get().trim() || !local$.newGc.get().trim()}
         >
           Add
-        </button>
+        </$React.button>
       </form>
 
       {loading && items.length === 0 ? (
@@ -91,68 +96,78 @@ export const VariantList = observer(function VariantList({ modelId }: VariantLis
         <ul className={styles.list}>
           {items.map((v) => (
             <li key={v.id} className={styles.item}>
-              {editId === v.id ? (
-                <form onSubmit={handleUpdate} className={styles.editForm}>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className={styles.input}
-                    autoFocus
-                  />
-                  <input
-                    type="text"
-                    value={editGc}
-                    onChange={(e) => setEditGc(e.target.value)}
-                    className={styles.inputSmall}
-                  />
-                  <button type="submit" className={styles.saveBtn}>Save</button>
-                  <button
-                    type="button"
-                    onClick={() => setEditId(null)}
-                    className={styles.cancelBtn}
-                  >
-                    Cancel
-                  </button>
-                </form>
-              ) : (
-                <>
-                  <div className={styles.variantInfo}>
-                    <span className={styles.name}>{v.name}</span>
-                    <span className={styles.gcNumber}>GC {v.gc_number}</span>
-                  </div>
-                  <div className={styles.actions}>
+              <Show
+                if={() => local$.editId.get() === v.id}
+                else={() => (
+                  <>
+                    <div className={styles.variantInfo}>
+                      <span className={styles.name}>{v.name}</span>
+                      <span className={styles.gcNumber}>GC {v.gc_number}</span>
+                    </div>
+                    <div className={styles.actions}>
+                      <button
+                        onClick={() => {
+                          local$.editId.set(v.id);
+                          local$.editName.set(v.name);
+                          local$.editGc.set(v.gc_number);
+                        }}
+                        className={styles.editBtn}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => local$.deleteId.set(v.id)}
+                        className={styles.deleteBtn}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
+              >
+                {() => (
+                  <form onSubmit={handleUpdate} className={styles.editForm}>
+                    <$React.input
+                      type="text"
+                      $value={local$.editName}
+                      className={styles.input}
+                      autoFocus
+                    />
+                    <$React.input
+                      type="text"
+                      $value={local$.editGc}
+                      className={styles.inputSmall}
+                    />
+                    <button type="submit" className={styles.saveBtn}>Save</button>
                     <button
-                      onClick={() => {
-                        setEditId(v.id);
-                        setEditName(v.name);
-                        setEditGc(v.gc_number);
-                      }}
-                      className={styles.editBtn}
+                      type="button"
+                      onClick={() => local$.editId.set(null)}
+                      className={styles.cancelBtn}
                     >
-                      Edit
+                      Cancel
                     </button>
-                    <button
-                      onClick={() => setDeleteId(v.id)}
-                      className={styles.deleteBtn}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </>
-              )}
+                  </form>
+                )}
+              </Show>
             </li>
           ))}
         </ul>
       )}
 
-      <ConfirmDialog
-        open={!!deleteId}
-        title="Delete Variant"
-        message={`Delete "${deleteTarget?.name}" (GC ${deleteTarget?.gc_number})?`}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteId(null)}
-      />
+      <Show if={() => !!local$.deleteId.get()}>
+        {() => {
+          const target = items.find((v) => v.id === local$.deleteId.get());
+          return (
+            <ConfirmDialog
+              open={true}
+              title="Delete Variant"
+              message={`Delete "${target?.name}" (GC ${target?.gc_number})?`}
+              onConfirm={handleDelete}
+              onCancel={() => local$.deleteId.set(null)}
+            />
+          );
+        }}
+      </Show>
     </div>
   );
-});
+}

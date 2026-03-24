@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { observer } from '@legendapp/state/react';
+import { useEffect } from 'react';
+import { useObservable, useValue, Show } from '@legendapp/state/react';
+import { $React } from '@legendapp/state/react-web';
 import { Link } from 'react-router-dom';
 import {
   manufacturers$,
@@ -11,15 +12,17 @@ import {
 import { ConfirmDialog } from '../ConfirmDialog';
 import styles from './ManufacturerList.module.css';
 
-export const ManufacturerList = observer(function ManufacturerList() {
-  const items = manufacturers$.items.get();
-  const loading = manufacturers$.loading.get();
-  const error = manufacturers$.error.get();
+export function ManufacturerList() {
+  const items = useValue(manufacturers$.items);
+  const loading = useValue(manufacturers$.loading);
+  const error = useValue(manufacturers$.error);
 
-  const [newName, setNewName] = useState('');
-  const [editId, setEditId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const local$ = useObservable({
+    newName: '',
+    editId: null as string | null,
+    editName: '',
+    deleteId: null as string | null,
+  });
 
   useEffect(() => {
     fetchManufacturers();
@@ -27,25 +30,27 @@ export const ManufacturerList = observer(function ManufacturerList() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim()) return;
-    await createManufacturer(newName);
-    setNewName('');
+    const name = local$.newName.get();
+    if (!name.trim()) return;
+    await createManufacturer(name);
+    local$.newName.set('');
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editId || !editName.trim()) return;
-    await updateManufacturer(editId, editName);
-    setEditId(null);
+    const id = local$.editId.get();
+    const name = local$.editName.get();
+    if (!id || !name.trim()) return;
+    await updateManufacturer(id, name);
+    local$.editId.set(null);
   };
 
   const handleDelete = async () => {
-    if (!deleteId) return;
-    await deleteManufacturer(deleteId);
-    setDeleteId(null);
+    const id = local$.deleteId.get();
+    if (!id) return;
+    await deleteManufacturer(id);
+    local$.deleteId.set(null);
   };
-
-  const deleteTarget = items.find((m) => m.id === deleteId);
 
   return (
     <div>
@@ -54,16 +59,19 @@ export const ManufacturerList = observer(function ManufacturerList() {
       {error && <div className={styles.error}>{error}</div>}
 
       <form onSubmit={handleCreate} className={styles.addForm}>
-        <input
+        <$React.input
           type="text"
-          value={newName}
-          onChange={(e) => setNewName(e.target.value)}
+          $value={local$.newName}
           placeholder="Add manufacturer..."
           className={styles.input}
         />
-        <button type="submit" className={styles.addBtn} disabled={!newName.trim()}>
+        <$React.button
+          type="submit"
+          className={styles.addBtn}
+          $disabled={() => !local$.newName.get().trim()}
+        >
           Add
-        </button>
+        </$React.button>
       </form>
 
       {loading && items.length === 0 ? (
@@ -74,57 +82,68 @@ export const ManufacturerList = observer(function ManufacturerList() {
         <ul className={styles.list}>
           {items.map((m) => (
             <li key={m.id} className={styles.item}>
-              {editId === m.id ? (
-                <form onSubmit={handleUpdate} className={styles.editForm}>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className={styles.input}
-                    autoFocus
-                  />
-                  <button type="submit" className={styles.saveBtn}>Save</button>
-                  <button
-                    type="button"
-                    onClick={() => setEditId(null)}
-                    className={styles.cancelBtn}
-                  >
-                    Cancel
-                  </button>
-                </form>
-              ) : (
-                <>
-                  <Link to={`/manufacturer/${m.id}`} className={styles.name}>
-                    {m.name}
-                  </Link>
-                  <div className={styles.actions}>
+              <Show
+                if={() => local$.editId.get() === m.id}
+                else={() => (
+                  <>
+                    <Link to={`/manufacturer/${m.id}`} className={styles.name}>
+                      {m.name}
+                    </Link>
+                    <div className={styles.actions}>
+                      <button
+                        onClick={() => { local$.editId.set(m.id); local$.editName.set(m.name); }}
+                        className={styles.editBtn}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => local$.deleteId.set(m.id)}
+                        className={styles.deleteBtn}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
+              >
+                {() => (
+                  <form onSubmit={handleUpdate} className={styles.editForm}>
+                    <$React.input
+                      type="text"
+                      $value={local$.editName}
+                      className={styles.input}
+                      autoFocus
+                    />
+                    <button type="submit" className={styles.saveBtn}>Save</button>
                     <button
-                      onClick={() => { setEditId(m.id); setEditName(m.name); }}
-                      className={styles.editBtn}
+                      type="button"
+                      onClick={() => local$.editId.set(null)}
+                      className={styles.cancelBtn}
                     >
-                      Edit
+                      Cancel
                     </button>
-                    <button
-                      onClick={() => setDeleteId(m.id)}
-                      className={styles.deleteBtn}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </>
-              )}
+                  </form>
+                )}
+              </Show>
             </li>
           ))}
         </ul>
       )}
 
-      <ConfirmDialog
-        open={!!deleteId}
-        title="Delete Manufacturer"
-        message={`Delete "${deleteTarget?.name}"? This will also delete all its models, variants, and manuals.`}
-        onConfirm={handleDelete}
-        onCancel={() => setDeleteId(null)}
-      />
+      <Show if={() => !!local$.deleteId.get()}>
+        {() => {
+          const target = items.find((m) => m.id === local$.deleteId.get());
+          return (
+            <ConfirmDialog
+              open={true}
+              title="Delete Manufacturer"
+              message={`Delete "${target?.name}"? This will also delete all its models, variants, and manuals.`}
+              onConfirm={handleDelete}
+              onCancel={() => local$.deleteId.set(null)}
+            />
+          );
+        }}
+      </Show>
     </div>
   );
-});
+}

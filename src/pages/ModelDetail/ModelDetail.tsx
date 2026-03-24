@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useObservable, useValue } from '@legendapp/state/react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { VariantList } from '../../components/VariantList';
@@ -12,7 +13,8 @@ interface ModelWithManufacturer extends Model {
 
 export function ModelDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [model, setModel] = useState<ModelWithManufacturer | null>(null);
+  const model$ = useObservable<ModelWithManufacturer | null>(null);
+  const model = useValue(model$);
 
   useEffect(() => {
     if (!id) return;
@@ -21,7 +23,7 @@ export function ModelDetailPage() {
       .select('*, manufacturers (*)')
       .eq('id', id)
       .single()
-      .then(({ data }) => setModel(data as ModelWithManufacturer));
+      .then(({ data }) => model$.set(data as ModelWithManufacturer));
   }, [id]);
 
   if (!id) return null;

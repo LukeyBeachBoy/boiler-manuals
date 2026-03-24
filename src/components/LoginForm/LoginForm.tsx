@@ -1,17 +1,16 @@
-import { useState } from 'react';
-import { observer } from '@legendapp/state/react';
+import { useObservable, useValue } from '@legendapp/state/react';
+import { $React } from '@legendapp/state/react-web';
 import { auth$, signIn } from '../../store/auth';
 import styles from './LoginForm.module.css';
 
-export const LoginForm = observer(function LoginForm() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const loading = auth$.loading.get();
-  const error = auth$.error.get();
+export function LoginForm() {
+  const local$ = useObservable({ email: '', password: '' });
+  const loading = useValue(auth$.loading);
+  const error = useValue(auth$.error);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await signIn(email, password);
+    await signIn(local$.email.get(), local$.password.get());
   };
 
   return (
@@ -23,10 +22,9 @@ export const LoginForm = observer(function LoginForm() {
 
       <label className={styles.label}>
         Email
-        <input
+        <$React.input
           type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          $value={local$.email}
           className={styles.input}
           required
           autoFocus
@@ -35,10 +33,9 @@ export const LoginForm = observer(function LoginForm() {
 
       <label className={styles.label}>
         Password
-        <input
+        <$React.input
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          $value={local$.password}
           className={styles.input}
           required
         />
@@ -49,4 +46,4 @@ export const LoginForm = observer(function LoginForm() {
       </button>
     </form>
   );
-});
+}

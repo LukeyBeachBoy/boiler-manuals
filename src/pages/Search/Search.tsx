@@ -1,21 +1,21 @@
 import { useEffect, useRef } from 'react';
-import { observer } from '@legendapp/state/react';
+import { useValue } from '@legendapp/state/react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { search$, performSearch, clearSearch } from '../../store/search';
 import { getManualSignedUrl } from '../../store/manuals';
 import styles from './Search.module.css';
 
-export const SearchPage = observer(function SearchPage() {
+export function SearchPage() {
   const [params] = useSearchParams();
   const q = params.get('q') ?? '';
   const didSearch = useRef('');
 
-  const manufacturers = search$.manufacturers.get();
-  const models = search$.models.get();
-  const variants = search$.variants.get();
-  const manuals = search$.manuals.get();
-  const loading = search$.loading.get();
-  const searched = search$.searched.get();
+  const manufacturers = useValue(search$.manufacturers);
+  const models = useValue(search$.models);
+  const variants = useValue(search$.variants);
+  const manuals = useValue(search$.manuals);
+  const loading = useValue(search$.loading);
+  const searched = useValue(search$.searched);
 
   useEffect(() => {
     if (q && q !== didSearch.current) {
@@ -136,4 +136,4 @@ export const SearchPage = observer(function SearchPage() {
       )}
     </div>
   );
-});
+}

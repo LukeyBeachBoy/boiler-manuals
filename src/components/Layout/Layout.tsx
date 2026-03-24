@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { observer } from '@legendapp/state/react';
+import { useObservable, useValue } from '@legendapp/state/react';
+import { $React } from '@legendapp/state/react-web';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { auth$, signOut } from '../../store/auth';
 import styles from './Layout.module.css';
 
-export const Layout = observer(function Layout() {
-  const user = auth$.user.get();
+export function Layout() {
+  const user = useValue(auth$.user);
   const navigate = useNavigate();
-  const [searchValue, setSearchValue] = useState('');
+  const searchValue$ = useObservable('');
 
   const handleSignOut = async () => {
     await signOut();
@@ -16,7 +16,7 @@ export const Layout = observer(function Layout() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const q = searchValue.trim();
+    const q = searchValue$.get().trim();
     if (q) {
       navigate(`/search?q=${encodeURIComponent(q)}`);
     }
@@ -30,10 +30,9 @@ export const Layout = observer(function Layout() {
             🔥 Boiler Manuals
           </Link>
           <form onSubmit={handleSearch} className={styles.searchForm}>
-            <input
+            <$React.input
               type="search"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
+              $value={searchValue$}
               placeholder="Search manufacturers, models, GC numbers..."
               className={styles.searchInput}
             />
@@ -53,4 +52,4 @@ export const Layout = observer(function Layout() {
       </main>
     </div>
   );
-});
+}

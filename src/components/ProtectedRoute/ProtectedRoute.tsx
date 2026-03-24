@@ -1,14 +1,14 @@
-import { observer } from '@legendapp/state/react';
+import { useValue } from '@legendapp/state/react';
 import { Navigate } from 'react-router-dom';
 import { auth$ } from '../../store/auth';
 
-export const ProtectedRoute = observer(function ProtectedRoute({
+export function ProtectedRoute({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const user = auth$.user.get();
-  const loading = auth$.loading.get();
+  const user = useValue(auth$.user);
+  const loading = useValue(auth$.loading);
 
   if (loading) {
     return <div style={{ padding: 32, textAlign: 'center' }}>Loading...</div>;
@@ -19,4 +19,4 @@ export const ProtectedRoute = observer(function ProtectedRoute({
   }
 
   return <>{children}</>;
-});
+}
