@@ -92,6 +92,19 @@ export function ModelList({ manufacturerId }: ModelListProps) {
                   <>
                     <Link to={`/model/${m.id}`} className={styles.name}>
                       {m.name}
+                      {m.manuals?.[0]?.count > 0 && (
+                        <svg
+                          className={styles.pdfIcon}
+                          width="16"
+                          height="16"
+                          viewBox="0 0 16 16"
+                          fill="none"
+                          aria-label="Has PDF manuals"
+                        >
+                          <path d="M4 1h5.5L13 4.5V13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2Z" fill="#e74c3c" opacity="0.15" stroke="#e74c3c" strokeWidth="1.2" />
+                          <text x="6.5" y="11.5" textAnchor="middle" fontSize="5" fontWeight="700" fill="#e74c3c">PDF</text>
+                        </svg>
+                      )}
                     </Link>
                     <div className={styles.actions}>
                       <button
