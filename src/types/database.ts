@@ -23,6 +23,10 @@ export const FUEL_TYPE_LABELS: Record<FuelType, string> = {
   oil: 'Oil',
 };
 
+// Extended Model type with arrays (the DB columns are boiler_types / fuel_types)
+// These are computed automatically from variants via a DB trigger.
+export type ModelWithTypes = Model;
+
 // Extended types with relations (used in detail views)
 export interface ModelWithRelations extends Model {
   variants?: Variant[];

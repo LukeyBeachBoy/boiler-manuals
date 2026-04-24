@@ -1,6 +1,7 @@
 import { observable } from '@legendapp/state';
 import { supabase } from '../lib/supabase';
 import type { Variant, BoilerType, FuelType } from '../types/database';
+import { refreshModelTypes } from './models';
 
 interface VariantsState {
   items: Variant[];
@@ -52,6 +53,7 @@ export async function createVariant(
   }
 
   variants$.items.set((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+  refreshModelTypes(modelId);
   return data;
 }
 
@@ -76,6 +78,8 @@ export async function updateVariant(
     prev.map((v) => (v.id === id ? { ...v, name: name.trim(), gc_number: gcNumber.trim(), boiler_type: boilerType, fuel_type: fuelType } : v))
       .sort((a, b) => a.name.localeCompare(b.name))
   );
+  const updated = variants$.items.get().find((v) => v.id === id);
+  if (updated) refreshModelTypes(updated.model_id);
   return true;
 }
 
@@ -90,6 +94,8 @@ export async function deleteVariant(id: string): Promise<boolean> {
     return false;
   }
 
+  const deleted = variants$.items.get().find((v) => v.id === id);
   variants$.items.set((prev) => prev.filter((v) => v.id !== id));
+  if (deleted) refreshModelTypes(deleted.model_id);
   return true;
 }

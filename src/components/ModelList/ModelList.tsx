@@ -10,9 +10,8 @@ import {
   deleteModel,
 } from '../../store/models';
 import { ConfirmDialog } from '../ConfirmDialog';
-import { TypeSelect } from '../TypeSelect/TypeSelect';
-import type { BoilerType, FuelType } from '../../types/database';
 import { BOILER_TYPE_LABELS, FUEL_TYPE_LABELS } from '../../types/database';
+import type { BoilerType, FuelType } from '../../types/database';
 import styles from './ModelList.module.css';
 
 interface ModelListProps {
@@ -26,12 +25,8 @@ export function ModelList({ manufacturerId }: ModelListProps) {
 
   const local$ = useObservable({
     newName: '',
-    newBoilerType: null as BoilerType | null,
-    newFuelType: null as FuelType | null,
     editId: null as string | null,
     editName: '',
-    editBoilerType: null as BoilerType | null,
-    editFuelType: null as FuelType | null,
     deleteId: null as string | null,
   });
 
@@ -43,15 +38,8 @@ export function ModelList({ manufacturerId }: ModelListProps) {
     e.preventDefault();
     const name = local$.newName.get();
     if (!name.trim()) return;
-    await createModel(
-      manufacturerId,
-      name,
-      local$.newBoilerType.get(),
-      local$.newFuelType.get(),
-    );
+    await createModel(manufacturerId, name);
     local$.newName.set('');
-    local$.newBoilerType.set(null);
-    local$.newFuelType.set(null);
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -59,12 +47,7 @@ export function ModelList({ manufacturerId }: ModelListProps) {
     const id = local$.editId.get();
     const name = local$.editName.get();
     if (!id || !name.trim()) return;
-    await updateModel(
-      id,
-      name,
-      local$.editBoilerType.get(),
-      local$.editFuelType.get(),
-    );
+    await updateModel(id, name);
     local$.editId.set(null);
   };
 
@@ -87,12 +70,6 @@ export function ModelList({ manufacturerId }: ModelListProps) {
           $value={local$.newName}
           placeholder="Add model..."
           className={styles.input}
-        />
-        <TypeSelect
-          boilerType={local$.newBoilerType.get()}
-          fuelType={local$.newFuelType.get()}
-          onBoilerTypeChange={(v) => local$.newBoilerType.set(v)}
-          onFuelTypeChange={(v) => local$.newFuelType.set(v)}
         />
         <$React.button
           type="submit"
@@ -133,12 +110,16 @@ export function ModelList({ manufacturerId }: ModelListProps) {
                         )}
                       </Link>
                       <div className={styles.typeBadges}>
-                        {m.boiler_type && (
-                          <span className={styles.badge}>{BOILER_TYPE_LABELS[m.boiler_type]}</span>
-                        )}
-                        {m.fuel_type && (
-                          <span className={styles.badge}>{FUEL_TYPE_LABELS[m.fuel_type]}</span>
-                        )}
+                        {(m.boiler_types ?? []).map((bt) => (
+                          <span key={bt} className={styles.badge}>
+                            {BOILER_TYPE_LABELS[bt as BoilerType]}
+                          </span>
+                        ))}
+                        {(m.fuel_types ?? []).map((ft) => (
+                          <span key={ft} className={styles.badge}>
+                            {FUEL_TYPE_LABELS[ft as FuelType]}
+                          </span>
+                        ))}
                       </div>
                     </div>
                     <div className={styles.actions}>
@@ -146,8 +127,6 @@ export function ModelList({ manufacturerId }: ModelListProps) {
                         onClick={() => {
                           local$.editId.set(m.id);
                           local$.editName.set(m.name);
-                          local$.editBoilerType.set(m.boiler_type ?? null);
-                          local$.editFuelType.set(m.fuel_type ?? null);
                         }}
                         className={styles.editBtn}
                       >
@@ -170,12 +149,6 @@ export function ModelList({ manufacturerId }: ModelListProps) {
                       $value={local$.editName}
                       className={styles.input}
                       autoFocus
-                    />
-                    <TypeSelect
-                      boilerType={local$.editBoilerType.get()}
-                      fuelType={local$.editFuelType.get()}
-                      onBoilerTypeChange={(v) => local$.editBoilerType.set(v)}
-                      onFuelTypeChange={(v) => local$.editFuelType.set(v)}
                     />
                     <button type="submit" className={styles.saveBtn}>Save</button>
                     <button

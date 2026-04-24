@@ -1,6 +1,6 @@
 import { observable } from '@legendapp/state';
 import { supabase } from '../lib/supabase';
-import type { Model, ModelWithRelations, BoilerType, FuelType } from '../types/database';
+import type { Model, ModelWithRelations } from '../types/database';
 
 // Model enriched with aggregated manual count from Supabase join
 type ModelWithManualCount = Model & { manuals: { count: number }[] };
@@ -70,12 +70,10 @@ export async function fetchModelWithRelations(modelId: string) {
 export async function createModel(
   manufacturerId: string,
   name: string,
-  boilerType: BoilerType | null,
-  fuelType: FuelType | null,
 ): Promise<Model | null> {
   const { data, error } = await supabase
     .from('models')
-    .insert({ manufacturer_id: manufacturerId, name: name.trim(), boiler_type: boilerType, fuel_type: fuelType })
+    .insert({ manufacturer_id: manufacturerId, name: name.trim() })
     .select()
     .single();
 
@@ -91,12 +89,10 @@ export async function createModel(
 export async function updateModel(
   id: string,
   name: string,
-  boilerType: BoilerType | null,
-  fuelType: FuelType | null,
 ): Promise<boolean> {
   const { error } = await supabase
     .from('models')
-    .update({ name: name.trim(), boiler_type: boilerType, fuel_type: fuelType })
+    .update({ name: name.trim() })
     .eq('id', id);
 
   if (error) {
@@ -105,10 +101,29 @@ export async function updateModel(
   }
 
   models$.items.set((prev) =>
-    prev.map((m) => (m.id === id ? { ...m, name: name.trim(), boiler_type: boilerType, fuel_type: fuelType } : m))
+    prev.map((m) => (m.id === id ? { ...m, name: name.trim() } : m))
       .sort((a, b) => a.name.localeCompare(b.name))
   );
   return true;
+}
+
+// Called after variant mutations to pull the DB-computed type arrays back into the store
+export async function refreshModelTypes(modelId: string): Promise<void> {
+  const { data } = await supabase
+    .from('models')
+    .select('boiler_types, fuel_types')
+    .eq('id', modelId)
+    .single();
+
+  if (data) {
+    models$.items.set((prev) =>
+      prev.map((m) =>
+        m.id === modelId
+          ? { ...m, boiler_types: data.boiler_types, fuel_types: data.fuel_types }
+          : m
+      )
+    );
+  }
 }
 
 export async function deleteModel(id: string): Promise<boolean> {

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useObservable, useValue, Show } from '@legendapp/state/react';
 import { $React } from '@legendapp/state/react-web';
+import type { Observable } from '@legendapp/state';
 import {
   variants$,
   fetchVariantsByModel,
@@ -16,6 +17,58 @@ import styles from './VariantList.module.css';
 
 interface VariantListProps {
   modelId: string;
+}
+
+// Separate sub-component so it has its own render cycle and TypeSelect re-renders on change
+interface EditFormState {
+  editId: string | null;
+  editName: string;
+  editGc: string;
+  editBoilerType: BoilerType | null;
+  editFuelType: FuelType | null;
+  deleteId: string | null;
+}
+
+function VariantEditForm({
+  local$,
+  onSubmit,
+}: {
+  local$: Observable<EditFormState & { newName: string; newGc: string; newBoilerType: BoilerType | null; newFuelType: FuelType | null }>;
+  onSubmit: (e: React.FormEvent) => void;
+}) {
+  const editBoilerType = useValue(local$.editBoilerType);
+  const editFuelType = useValue(local$.editFuelType);
+
+  return (
+    <form onSubmit={onSubmit} className={styles.editForm}>
+      <$React.input
+        type="text"
+        $value={local$.editName}
+        className={styles.input}
+        autoFocus
+      />
+      <$React.input
+        type="text"
+        $value={local$.editGc}
+        className={styles.inputSmall}
+      />
+      <TypeSelect
+        boilerType={editBoilerType}
+        fuelType={editFuelType}
+        onBoilerTypeChange={(v) => local$.editBoilerType.set(v)}
+        onFuelTypeChange={(v) => local$.editFuelType.set(v)}
+        compact
+      />
+      <button type="submit" className={styles.saveBtn}>Save</button>
+      <button
+        type="button"
+        onClick={() => local$.editId.set(null)}
+        className={styles.cancelBtn}
+      >
+        Cancel
+      </button>
+    </form>
+  );
 }
 
 export function VariantList({ modelId }: VariantListProps) {
@@ -35,6 +88,10 @@ export function VariantList({ modelId }: VariantListProps) {
     editFuelType: null as FuelType | null,
     deleteId: null as string | null,
   });
+
+  // Subscribe so add-form TypeSelect re-renders when values change
+  const newBoilerType = useValue(local$.newBoilerType);
+  const newFuelType = useValue(local$.newFuelType);
 
   useEffect(() => {
     fetchVariantsByModel(modelId);
@@ -101,8 +158,8 @@ export function VariantList({ modelId }: VariantListProps) {
           className={styles.inputSmall}
         />
         <TypeSelect
-          boilerType={local$.newBoilerType.get()}
-          fuelType={local$.newFuelType.get()}
+          boilerType={newBoilerType}
+          fuelType={newFuelType}
           onBoilerTypeChange={(v) => local$.newBoilerType.set(v)}
           onFuelTypeChange={(v) => local$.newFuelType.set(v)}
         />
@@ -160,36 +217,7 @@ export function VariantList({ modelId }: VariantListProps) {
                   </>
                 )}
               >
-                {() => (
-                  <form onSubmit={handleUpdate} className={styles.editForm}>
-                    <$React.input
-                      type="text"
-                      $value={local$.editName}
-                      className={styles.input}
-                      autoFocus
-                    />
-                    <$React.input
-                      type="text"
-                      $value={local$.editGc}
-                      className={styles.inputSmall}
-                    />
-                    <TypeSelect
-                      boilerType={local$.editBoilerType.get()}
-                      fuelType={local$.editFuelType.get()}
-                      onBoilerTypeChange={(v) => local$.editBoilerType.set(v)}
-                      onFuelTypeChange={(v) => local$.editFuelType.set(v)}
-                      compact
-                    />
-                    <button type="submit" className={styles.saveBtn}>Save</button>
-                    <button
-                      type="button"
-                      onClick={() => local$.editId.set(null)}
-                      className={styles.cancelBtn}
-                    >
-                      Cancel
-                    </button>
-                  </form>
-                )}
+                {() => <VariantEditForm local$={local$} onSubmit={handleUpdate} />}
               </Show>
             </li>
           ))}

@@ -127,25 +127,25 @@ export type Database = {
       }
       models: {
         Row: {
-          boiler_type: Database["public"]["Enums"]["boiler_type"] | null
+          boiler_types: Database["public"]["Enums"]["boiler_type"][]
           created_at: string
-          fuel_type: Database["public"]["Enums"]["fuel_type"] | null
+          fuel_types: Database["public"]["Enums"]["fuel_type"][]
           id: string
           manufacturer_id: string
           name: string
         }
         Insert: {
-          boiler_type?: Database["public"]["Enums"]["boiler_type"] | null
+          boiler_types?: Database["public"]["Enums"]["boiler_type"][]
           created_at?: string
-          fuel_type?: Database["public"]["Enums"]["fuel_type"] | null
+          fuel_types?: Database["public"]["Enums"]["fuel_type"][]
           id?: string
           manufacturer_id: string
           name: string
         }
         Update: {
-          boiler_type?: Database["public"]["Enums"]["boiler_type"] | null
+          boiler_types?: Database["public"]["Enums"]["boiler_type"][]
           created_at?: string
-          fuel_type?: Database["public"]["Enums"]["fuel_type"] | null
+          fuel_types?: Database["public"]["Enums"]["fuel_type"][]
           id?: string
           manufacturer_id?: string
           name?: string
