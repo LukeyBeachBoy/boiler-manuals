@@ -125,6 +125,76 @@
   background: var(--color-surface);
 }
 
+.actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.editBtn {
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  transition: all var(--transition);
+}
+
+.editBtn:hover {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.editForm {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  align-items: center;
+}
+
+.editInput {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  font-size: 14px;
+  outline: none;
+  transition: border-color var(--transition);
+}
+
+.editInput:focus {
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.saveBtn {
+  padding: 3px 10px;
+  background: var(--color-primary);
+  color: white;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 600;
+  transition: background var(--transition);
+}
+
+.saveBtn:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+.saveBtn:disabled {
+  opacity: 0.5;
+}
+
+.cancelBtn {
+  padding: 3px 8px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px solid var(--color-border);
+  transition: all var(--transition);
+}
+
 .manualInfo {
   display: flex;
   flex-direction: column;

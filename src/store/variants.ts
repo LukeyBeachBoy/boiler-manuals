@@ -1,6 +1,6 @@
 import { observable } from '@legendapp/state';
 import { supabase } from '../lib/supabase';
-import type { Variant } from '../types/database';
+import type { Variant, BoilerType, FuelType } from '../types/database';
 
 interface VariantsState {
   items: Variant[];
@@ -27,7 +27,7 @@ export async function fetchVariantsByModel(modelId: string) {
   if (error) {
     variants$.error.set(error.message);
   } else {
-    variants$.items.set(data);
+    variants$.items.set(data as unknown as Variant[]);
   }
 
   variants$.loading.set(false);
@@ -36,11 +36,13 @@ export async function fetchVariantsByModel(modelId: string) {
 export async function createVariant(
   modelId: string,
   name: string,
-  gcNumber: string
+  gcNumber: string,
+  boilerType: BoilerType | null,
+  fuelType: FuelType | null,
 ): Promise<Variant | null> {
   const { data, error } = await supabase
     .from('variants')
-    .insert({ model_id: modelId, name: name.trim(), gc_number: gcNumber.trim() })
+    .insert({ model_id: modelId, name: name.trim(), gc_number: gcNumber.trim(), boiler_type: boilerType, fuel_type: fuelType })
     .select()
     .single();
 
@@ -49,18 +51,20 @@ export async function createVariant(
     return null;
   }
 
-  variants$.items.set((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
-  return data;
+  variants$.items.set((prev) => [...prev, data as unknown as Variant].sort((a, b) => a.name.localeCompare(b.name)));
+  return data as unknown as Variant;
 }
 
 export async function updateVariant(
   id: string,
   name: string,
-  gcNumber: string
+  gcNumber: string,
+  boilerType: BoilerType | null,
+  fuelType: FuelType | null,
 ): Promise<boolean> {
   const { error } = await supabase
     .from('variants')
-    .update({ name: name.trim(), gc_number: gcNumber.trim() })
+    .update({ name: name.trim(), gc_number: gcNumber.trim(), boiler_type: boilerType, fuel_type: fuelType })
     .eq('id', id);
 
   if (error) {
@@ -69,7 +73,7 @@ export async function updateVariant(
   }
 
   variants$.items.set((prev) =>
-    prev.map((v) => (v.id === id ? { ...v, name: name.trim(), gc_number: gcNumber.trim() } : v))
+    prev.map((v) => (v.id === id ? { ...v, name: name.trim(), gc_number: gcNumber.trim(), boiler_type: boilerType, fuel_type: fuelType } : v))
       .sort((a, b) => a.name.localeCompare(b.name))
   );
   return true;

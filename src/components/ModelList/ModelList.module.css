@@ -71,6 +71,27 @@
   background: var(--color-surface);
 }
 
+.nameWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.typeBadges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 11px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 1px 8px;
+}
+
 .name {
   display: inline-flex;
   align-items: center;

@@ -6,6 +6,7 @@ import {
   fetchManualsByModel,
   uploadManual,
   deleteManual,
+  updateManualTitle,
   getManualSignedUrl,
 } from '../../store/manuals';
 import { variants$ } from '../../store/variants';
@@ -30,6 +31,8 @@ export function ManualList({ modelId }: ManualListProps) {
     title: '',
     selectedVariants: [] as string[],
     deleteTarget: null as Manual | null,
+    editId: null as string | null,
+    editTitle: '',
   });
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -53,6 +56,15 @@ export function ManualList({ modelId }: ManualListProps) {
     if (!target) return;
     await deleteManual(target);
     local$.deleteTarget.set(null);
+  };
+
+  const handleEditSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const id = local$.editId.get();
+    const title = local$.editTitle.get();
+    if (!id || !title.trim()) return;
+    await updateManualTitle(id, title);
+    local$.editId.set(null);
   };
 
   const handleDownload = async (filePath: string) => {
@@ -133,34 +145,77 @@ export function ManualList({ modelId }: ManualListProps) {
         <ul className={styles.list}>
           {items.map((m: any) => (
             <li key={m.id} className={styles.item}>
-              <div className={styles.manualInfo}>
-                <button
-                  onClick={() => handleDownload(m.file_path)}
-                  className={styles.manualTitle}
-                >
-                  📄 {m.title}
-                </button>
-                <div className={styles.meta}>
-                  {m.file_size && (
-                    <span className={styles.size}>{formatSize(m.file_size)}</span>
-                  )}
-                  {m.manual_variants?.length > 0 && (
-                    <span className={styles.covers}>
-                      Covers:{' '}
-                      {m.manual_variants
-                        .map((mv: any) => mv.variants?.name)
-                        .filter(Boolean)
-                        .join(', ')}
-                    </span>
-                  )}
-                </div>
-              </div>
-              <button
-                onClick={() => local$.deleteTarget.set(m)}
-                className={styles.deleteBtn}
+              <Show
+                if={() => local$.editId.get() === m.id}
+                else={() => (
+                  <>
+                    <div className={styles.manualInfo}>
+                      <button
+                        onClick={() => handleDownload(m.file_path)}
+                        className={styles.manualTitle}
+                      >
+                        📄 {m.title}
+                      </button>
+                      <div className={styles.meta}>
+                        {m.file_size && (
+                          <span className={styles.size}>{formatSize(m.file_size)}</span>
+                        )}
+                        {m.manual_variants?.length > 0 && (
+                          <span className={styles.covers}>
+                            Covers:{' '}
+                            {m.manual_variants
+                              .map((mv: any) => mv.variants?.name)
+                              .filter(Boolean)
+                              .join(', ')}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className={styles.actions}>
+                      <button
+                        onClick={() => {
+                          local$.editId.set(m.id);
+                          local$.editTitle.set(m.title);
+                        }}
+                        className={styles.editBtn}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => local$.deleteTarget.set(m)}
+                        className={styles.deleteBtn}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
               >
-                Delete
-              </button>
+                {() => (
+                  <form onSubmit={handleEditSave} className={styles.editForm}>
+                    <$React.input
+                      type="text"
+                      $value={local$.editTitle}
+                      className={styles.editInput}
+                      autoFocus
+                    />
+                    <$React.button
+                      type="submit"
+                      className={styles.saveBtn}
+                      $disabled={() => !local$.editTitle.get().trim()}
+                    >
+                      Save
+                    </$React.button>
+                    <button
+                      type="button"
+                      onClick={() => local$.editId.set(null)}
+                      className={styles.cancelBtn}
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                )}
+              </Show>
             </li>
           ))}
         </ul>

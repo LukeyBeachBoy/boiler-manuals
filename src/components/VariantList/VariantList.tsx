@@ -9,6 +9,9 @@ import {
   deleteVariant,
 } from '../../store/variants';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { TypeSelect } from '../TypeSelect/TypeSelect';
+import type { BoilerType, FuelType } from '../../types/database';
+import { BOILER_TYPE_LABELS, FUEL_TYPE_LABELS } from '../../types/database';
 import styles from './VariantList.module.css';
 
 interface VariantListProps {
@@ -23,9 +26,13 @@ export function VariantList({ modelId }: VariantListProps) {
   const local$ = useObservable({
     newName: '',
     newGc: '',
+    newBoilerType: null as BoilerType | null,
+    newFuelType: null as FuelType | null,
     editId: null as string | null,
     editName: '',
     editGc: '',
+    editBoilerType: null as BoilerType | null,
+    editFuelType: null as FuelType | null,
     deleteId: null as string | null,
   });
 
@@ -38,9 +45,17 @@ export function VariantList({ modelId }: VariantListProps) {
     const name = local$.newName.get();
     const gc = local$.newGc.get();
     if (!name.trim() || !gc.trim()) return;
-    await createVariant(modelId, name, gc);
+    await createVariant(
+      modelId,
+      name,
+      gc,
+      local$.newBoilerType.get(),
+      local$.newFuelType.get(),
+    );
     local$.newName.set('');
     local$.newGc.set('');
+    local$.newBoilerType.set(null);
+    local$.newFuelType.set(null);
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -49,7 +64,13 @@ export function VariantList({ modelId }: VariantListProps) {
     const name = local$.editName.get();
     const gc = local$.editGc.get();
     if (!id || !name.trim() || !gc.trim()) return;
-    await updateVariant(id, name, gc);
+    await updateVariant(
+      id,
+      name,
+      gc,
+      local$.editBoilerType.get(),
+      local$.editFuelType.get(),
+    );
     local$.editId.set(null);
   };
 
@@ -79,6 +100,12 @@ export function VariantList({ modelId }: VariantListProps) {
           placeholder="GC number..."
           className={styles.inputSmall}
         />
+        <TypeSelect
+          boilerType={local$.newBoilerType.get()}
+          fuelType={local$.newFuelType.get()}
+          onBoilerTypeChange={(v) => local$.newBoilerType.set(v)}
+          onFuelTypeChange={(v) => local$.newFuelType.set(v)}
+        />
         <$React.button
           type="submit"
           className={styles.addBtn}
@@ -103,6 +130,12 @@ export function VariantList({ modelId }: VariantListProps) {
                     <div className={styles.variantInfo}>
                       <span className={styles.name}>{v.name}</span>
                       <span className={styles.gcNumber}>GC {v.gc_number}</span>
+                      {v.boiler_type && (
+                        <span className={styles.typeBadge}>{BOILER_TYPE_LABELS[v.boiler_type]}</span>
+                      )}
+                      {v.fuel_type && (
+                        <span className={styles.typeBadge}>{FUEL_TYPE_LABELS[v.fuel_type]}</span>
+                      )}
                     </div>
                     <div className={styles.actions}>
                       <button
@@ -110,6 +143,8 @@ export function VariantList({ modelId }: VariantListProps) {
                           local$.editId.set(v.id);
                           local$.editName.set(v.name);
                           local$.editGc.set(v.gc_number);
+                          local$.editBoilerType.set(v.boiler_type ?? null);
+                          local$.editFuelType.set(v.fuel_type ?? null);
                         }}
                         className={styles.editBtn}
                       >
@@ -137,6 +172,13 @@ export function VariantList({ modelId }: VariantListProps) {
                       type="text"
                       $value={local$.editGc}
                       className={styles.inputSmall}
+                    />
+                    <TypeSelect
+                      boilerType={local$.editBoilerType.get()}
+                      fuelType={local$.editFuelType.get()}
+                      onBoilerTypeChange={(v) => local$.editBoilerType.set(v)}
+                      onFuelTypeChange={(v) => local$.editFuelType.set(v)}
+                      compact
                     />
                     <button type="submit" className={styles.saveBtn}>Save</button>
                     <button

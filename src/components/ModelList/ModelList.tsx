@@ -10,6 +10,9 @@ import {
   deleteModel,
 } from '../../store/models';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { TypeSelect } from '../TypeSelect/TypeSelect';
+import type { BoilerType, FuelType } from '../../types/database';
+import { BOILER_TYPE_LABELS, FUEL_TYPE_LABELS } from '../../types/database';
 import styles from './ModelList.module.css';
 
 interface ModelListProps {
@@ -23,8 +26,12 @@ export function ModelList({ manufacturerId }: ModelListProps) {
 
   const local$ = useObservable({
     newName: '',
+    newBoilerType: null as BoilerType | null,
+    newFuelType: null as FuelType | null,
     editId: null as string | null,
     editName: '',
+    editBoilerType: null as BoilerType | null,
+    editFuelType: null as FuelType | null,
     deleteId: null as string | null,
   });
 
@@ -36,8 +43,15 @@ export function ModelList({ manufacturerId }: ModelListProps) {
     e.preventDefault();
     const name = local$.newName.get();
     if (!name.trim()) return;
-    await createModel(manufacturerId, name);
+    await createModel(
+      manufacturerId,
+      name,
+      local$.newBoilerType.get(),
+      local$.newFuelType.get(),
+    );
     local$.newName.set('');
+    local$.newBoilerType.set(null);
+    local$.newFuelType.set(null);
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
@@ -45,7 +59,12 @@ export function ModelList({ manufacturerId }: ModelListProps) {
     const id = local$.editId.get();
     const name = local$.editName.get();
     if (!id || !name.trim()) return;
-    await updateModel(id, name);
+    await updateModel(
+      id,
+      name,
+      local$.editBoilerType.get(),
+      local$.editFuelType.get(),
+    );
     local$.editId.set(null);
   };
 
@@ -69,6 +88,12 @@ export function ModelList({ manufacturerId }: ModelListProps) {
           placeholder="Add model..."
           className={styles.input}
         />
+        <TypeSelect
+          boilerType={local$.newBoilerType.get()}
+          fuelType={local$.newFuelType.get()}
+          onBoilerTypeChange={(v) => local$.newBoilerType.set(v)}
+          onFuelTypeChange={(v) => local$.newFuelType.set(v)}
+        />
         <$React.button
           type="submit"
           className={styles.addBtn}
@@ -90,25 +115,40 @@ export function ModelList({ manufacturerId }: ModelListProps) {
                 if={() => local$.editId.get() === m.id}
                 else={() => (
                   <>
-                    <Link to={`/model/${m.id}`} className={styles.name}>
-                      {m.name}
-                      {m.manuals?.[0]?.count > 0 && (
-                        <svg
-                          className={styles.pdfIcon}
-                          width="16"
-                          height="16"
-                          viewBox="0 0 16 16"
-                          fill="none"
-                          aria-label="Has PDF manuals"
-                        >
-                          <path d="M4 1h5.5L13 4.5V13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2Z" fill="#e74c3c" opacity="0.15" stroke="#e74c3c" strokeWidth="1.2" />
-                          <text x="6.5" y="11.5" textAnchor="middle" fontSize="5" fontWeight="700" fill="#e74c3c">PDF</text>
-                        </svg>
-                      )}
-                    </Link>
+                    <div className={styles.nameWrap}>
+                      <Link to={`/model/${m.id}`} className={styles.name}>
+                        {m.name}
+                        {m.manuals?.[0]?.count > 0 && (
+                          <svg
+                            className={styles.pdfIcon}
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                            aria-label="Has PDF manuals"
+                          >
+                            <path d="M4 1h5.5L13 4.5V13a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2Z" fill="#e74c3c" opacity="0.15" stroke="#e74c3c" strokeWidth="1.2" />
+                            <text x="6.5" y="11.5" textAnchor="middle" fontSize="5" fontWeight="700" fill="#e74c3c">PDF</text>
+                          </svg>
+                        )}
+                      </Link>
+                      <div className={styles.typeBadges}>
+                        {m.boiler_type && (
+                          <span className={styles.badge}>{BOILER_TYPE_LABELS[m.boiler_type]}</span>
+                        )}
+                        {m.fuel_type && (
+                          <span className={styles.badge}>{FUEL_TYPE_LABELS[m.fuel_type]}</span>
+                        )}
+                      </div>
+                    </div>
                     <div className={styles.actions}>
                       <button
-                        onClick={() => { local$.editId.set(m.id); local$.editName.set(m.name); }}
+                        onClick={() => {
+                          local$.editId.set(m.id);
+                          local$.editName.set(m.name);
+                          local$.editBoilerType.set(m.boiler_type ?? null);
+                          local$.editFuelType.set(m.fuel_type ?? null);
+                        }}
                         className={styles.editBtn}
                       >
                         Edit
@@ -130,6 +170,12 @@ export function ModelList({ manufacturerId }: ModelListProps) {
                       $value={local$.editName}
                       className={styles.input}
                       autoFocus
+                    />
+                    <TypeSelect
+                      boilerType={local$.editBoilerType.get()}
+                      fuelType={local$.editFuelType.get()}
+                      onBoilerTypeChange={(v) => local$.editBoilerType.set(v)}
+                      onFuelTypeChange={(v) => local$.editFuelType.set(v)}
                     />
                     <button type="submit" className={styles.saveBtn}>Save</button>
                     <button

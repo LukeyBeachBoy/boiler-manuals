@@ -127,6 +127,23 @@ export async function deleteManual(manual: Manual): Promise<boolean> {
   return true;
 }
 
+export async function updateManualTitle(id: string, title: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('manuals')
+    .update({ title: title.trim() })
+    .eq('id', id);
+
+  if (error) {
+    manuals$.error.set(error.message);
+    return false;
+  }
+
+  manuals$.items.set((prev) =>
+    prev.map((m) => (m.id === id ? { ...m, title: title.trim() } : m))
+  );
+  return true;
+}
+
 export function getManualDownloadUrl(filePath: string): string {
   const { data } = supabase.storage.from('manuals').getPublicUrl(filePath);
   return data.publicUrl;
