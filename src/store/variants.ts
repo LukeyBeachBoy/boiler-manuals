@@ -27,7 +27,7 @@ export async function fetchVariantsByModel(modelId: string) {
   if (error) {
     variants$.error.set(error.message);
   } else {
-    variants$.items.set(data as unknown as Variant[]);
+    variants$.items.set(data);
   }
 
   variants$.loading.set(false);
@@ -51,8 +51,8 @@ export async function createVariant(
     return null;
   }
 
-  variants$.items.set((prev) => [...prev, data as unknown as Variant].sort((a, b) => a.name.localeCompare(b.name)));
-  return data as unknown as Variant;
+  variants$.items.set((prev) => [...prev, data].sort((a, b) => a.name.localeCompare(b.name)));
+  return data;
 }
 
 export async function updateVariant(

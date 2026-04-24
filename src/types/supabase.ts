@@ -127,19 +127,25 @@ export type Database = {
       }
       models: {
         Row: {
+          boiler_type: Database["public"]["Enums"]["boiler_type"] | null
           created_at: string
+          fuel_type: Database["public"]["Enums"]["fuel_type"] | null
           id: string
           manufacturer_id: string
           name: string
         }
         Insert: {
+          boiler_type?: Database["public"]["Enums"]["boiler_type"] | null
           created_at?: string
+          fuel_type?: Database["public"]["Enums"]["fuel_type"] | null
           id?: string
           manufacturer_id: string
           name: string
         }
         Update: {
+          boiler_type?: Database["public"]["Enums"]["boiler_type"] | null
           created_at?: string
+          fuel_type?: Database["public"]["Enums"]["fuel_type"] | null
           id?: string
           manufacturer_id?: string
           name?: string
@@ -170,21 +176,27 @@ export type Database = {
       }
       variants: {
         Row: {
+          boiler_type: Database["public"]["Enums"]["boiler_type"] | null
           created_at: string
+          fuel_type: Database["public"]["Enums"]["fuel_type"] | null
           gc_number: string
           id: string
           model_id: string
           name: string
         }
         Insert: {
+          boiler_type?: Database["public"]["Enums"]["boiler_type"] | null
           created_at?: string
+          fuel_type?: Database["public"]["Enums"]["fuel_type"] | null
           gc_number: string
           id?: string
           model_id: string
           name: string
         }
         Update: {
+          boiler_type?: Database["public"]["Enums"]["boiler_type"] | null
           created_at?: string
+          fuel_type?: Database["public"]["Enums"]["fuel_type"] | null
           gc_number?: string
           id?: string
           model_id?: string
@@ -249,7 +261,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      boiler_type: "combi" | "heat_only" | "system"
+      fuel_type: "natural_gas" | "lpg" | "oil"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -376,6 +389,9 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      boiler_type: ["combi", "heat_only", "system"],
+      fuel_type: ["natural_gas", "lpg", "oil"],
+    },
   },
 } as const

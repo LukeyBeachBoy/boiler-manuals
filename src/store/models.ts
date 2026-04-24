@@ -32,7 +32,7 @@ export async function fetchModelsByManufacturer(manufacturerId: string) {
   if (error) {
     models$.error.set(error.message);
   } else {
-    models$.items.set(data as unknown as ModelWithManualCount[]);
+    models$.items.set(data as ModelWithManualCount[]);
   }
 
   models$.loading.set(false);
@@ -84,8 +84,8 @@ export async function createModel(
     return null;
   }
 
-  models$.items.set((prev) => [...prev, { ...data as unknown as Model, manuals: [{ count: 0 }] }].sort((a, b) => a.name.localeCompare(b.name)));
-  return data as unknown as Model;
+  models$.items.set((prev) => [...prev, { ...data as Model, manuals: [{ count: 0 }] }].sort((a, b) => a.name.localeCompare(b.name)));
+  return data as Model;
 }
 
 export async function updateModel(
