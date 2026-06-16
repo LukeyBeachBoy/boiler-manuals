@@ -13,6 +13,7 @@ import { ConfirmDialog } from '../ConfirmDialog';
 import { TypeSelect } from '../TypeSelect/TypeSelect';
 import type { BoilerType, FuelType } from '../../types/database';
 import { BOILER_TYPE_LABELS, FUEL_TYPE_LABELS } from '../../types/database';
+import { formatGcNumber } from '../../lib/gcNumber';
 import styles from './VariantList.module.css';
 
 interface VariantListProps {
@@ -38,6 +39,7 @@ function VariantEditForm({
 }) {
   const editBoilerType = useValue(local$.editBoilerType);
   const editFuelType = useValue(local$.editFuelType);
+  const editGc = useValue(local$.editGc);
 
   return (
     <form onSubmit={onSubmit} className={styles.editForm}>
@@ -47,9 +49,12 @@ function VariantEditForm({
         className={styles.input}
         autoFocus
       />
-      <$React.input
+      <input
         type="text"
-        $value={local$.editGc}
+        inputMode="numeric"
+        value={editGc}
+        onChange={(e) => local$.editGc.set(formatGcNumber(e.target.value))}
+        placeholder="NN-NNN-NN"
         className={styles.inputSmall}
       />
       <TypeSelect
@@ -92,6 +97,7 @@ export function VariantList({ modelId }: VariantListProps) {
   // Subscribe so add-form TypeSelect re-renders when values change
   const newBoilerType = useValue(local$.newBoilerType);
   const newFuelType = useValue(local$.newFuelType);
+  const newGc = useValue(local$.newGc);
 
   useEffect(() => {
     fetchVariantsByModel(modelId);
@@ -151,10 +157,12 @@ export function VariantList({ modelId }: VariantListProps) {
           placeholder="Variant name..."
           className={styles.input}
         />
-        <$React.input
+        <input
           type="text"
-          $value={local$.newGc}
-          placeholder="GC number..."
+          inputMode="numeric"
+          value={newGc}
+          onChange={(e) => local$.newGc.set(formatGcNumber(e.target.value))}
+          placeholder="NN-NNN-NN"
           className={styles.inputSmall}
         />
         <TypeSelect
