@@ -52,3 +52,6 @@ grant execute on function public.save_manufacturer_directory(uuid,jsonb,jsonb,uu
 grant select on public.product_categories,public.manufacturer_contacts,public.manufacturer_categories to anon;
 grant select,insert,update,delete on public.product_categories,public.manufacturer_contacts,public.manufacturer_categories to authenticated;
 grant select on public.manufacturers to anon;
+
+revoke execute on function public.is_directory_admin() from anon;
+revoke execute on function public.save_manufacturer_directory(uuid,jsonb,jsonb,uuid[]) from anon;
