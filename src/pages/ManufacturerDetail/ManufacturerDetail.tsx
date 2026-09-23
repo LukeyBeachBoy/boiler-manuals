@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useObservable, useValue } from '@legendapp/state/react';
 import { Link, useParams } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { manufacturerLogoUrl, isUploadedManufacturerLogo } from '../../lib/manufacturerLogo';
 import { ModelList } from '../../components/ModelList';
 import type { Tables, Json } from '../../types/supabase';
 import styles from './ManufacturerDetail.module.css';
@@ -197,7 +198,7 @@ export function ManufacturerDetailPage() {
         p_category_ids: local$.selectedCategories.get(),
       });
       if (result.error) throw result.error;
-      if (previousLogo.current && previousLogo.current !== logoPath) {
+      if (isUploadedManufacturerLogo(previousLogo.current) && previousLogo.current !== logoPath) {
         await supabase.storage.from('manufacturer-logos').remove([previousLogo.current]);
       }
       previousLogo.current = logoPath;
@@ -216,9 +217,7 @@ export function ManufacturerDetailPage() {
     }
   };
 
-  const logoUrl = profile.logo_path
-    ? supabase.storage.from('manufacturer-logos').getPublicUrl(profile.logo_path).data.publicUrl
-    : null;
+  const logoUrl = manufacturerLogoUrl(profile.logo_path);
   const support = contacts.find((c) => c.action_role === 'technical_support');
   const website = contacts.find((c) => c.action_role === 'main_website');
   const external = contacts.find((c) => c.action_role === 'external_manuals');

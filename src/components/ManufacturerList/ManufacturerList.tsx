@@ -11,6 +11,7 @@ import {
 } from '../../store/manufacturers';
 import { ConfirmDialog } from '../ConfirmDialog';
 import { supabase } from '../../lib/supabase';
+import { manufacturerLogoUrl } from '../../lib/manufacturerLogo';
 import type { Tables } from '../../types/supabase';
 import styles from './ManufacturerList.module.css';
 
@@ -117,7 +118,7 @@ export function ManufacturerList() {
                 else={() => (
                   <>
                     <div className={styles.identity}>
-                      {m.logo_path && <img className={styles.logo} src={supabase.storage.from('manufacturer-logos').getPublicUrl(m.logo_path).data.publicUrl} alt="" />}
+                      {m.logo_path && <img className={styles.logo} src={manufacturerLogoUrl(m.logo_path) ?? undefined} alt="" />}
                       <Link to={`/manufacturer/${m.id}`} className={styles.name}>{m.name}</Link>
                       <span className={m.published ? styles.published : styles.draft}>{m.published ? 'Published' : 'Draft'}</span>
                     </div>

@@ -1,5 +1,6 @@
 import { observable } from '@legendapp/state';
 import { supabase } from '../lib/supabase';
+import { isUploadedManufacturerLogo } from '../lib/manufacturerLogo';
 import type { Manufacturer } from '../types/database';
 
 interface ManufacturersState {
@@ -92,8 +93,9 @@ export async function deleteManufacturer(id: string): Promise<boolean> {
     const cleanup = await supabase.storage.from('manuals').remove(paths.slice(i, i + 100));
     if (cleanup.error) manufacturers$.error.set('Manufacturer deleted, but some PDF files need cleanup: ' + cleanup.error.message);
   }
-  if (manufacturer.data?.logo_path) {
-    const cleanup = await supabase.storage.from('manufacturer-logos').remove([manufacturer.data.logo_path]);
+  const logoPath = manufacturer.data?.logo_path ?? null;
+  if (isUploadedManufacturerLogo(logoPath)) {
+    const cleanup = await supabase.storage.from('manufacturer-logos').remove([logoPath]);
     if (cleanup.error) manufacturers$.error.set('Manufacturer deleted, but its logo needs cleanup: ' + cleanup.error.message);
   }
   return true;
