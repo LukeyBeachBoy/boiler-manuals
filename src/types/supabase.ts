@@ -434,6 +434,15 @@ export type Database = {
         Args: { p_model_id: string }
         Returns: undefined
       }
+      save_manufacturer_directory: {
+        Args: {
+          p_category_ids: string[]
+          p_contacts: Json
+          p_manufacturer_id: string
+          p_profile: Json
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       boiler_type: "combi" | "heat_only" | "system"
