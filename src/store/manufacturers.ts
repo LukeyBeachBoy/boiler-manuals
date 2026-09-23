@@ -67,6 +67,15 @@ export async function updateManufacturer(id: string, name: string): Promise<bool
 }
 
 export async function deleteManufacturer(id: string): Promise<boolean> {
+  // Capture storage paths before the database cascade removes the records.
+  const [manuals, manufacturer] = await Promise.all([
+    supabase.from('manuals').select('file_path, models!inner(manufacturer_id)').eq('models.manufacturer_id', id),
+    supabase.from('manufacturers').select('logo_path').eq('id', id).single(),
+  ]);
+  if (manuals.error || manufacturer.error) {
+    manufacturers$.error.set(manuals.error?.message ?? manufacturer.error?.message ?? 'Could not load files.');
+    return false;
+  }
   const { error } = await supabase
     .from('manufacturers')
     .delete()
@@ -78,5 +87,14 @@ export async function deleteManufacturer(id: string): Promise<boolean> {
   }
 
   manufacturers$.items.set((prev) => prev.filter((m) => m.id !== id));
+  const paths = (manuals.data ?? []).map((manual) => manual.file_path);
+  for (let i = 0; i < paths.length; i += 100) {
+    const cleanup = await supabase.storage.from('manuals').remove(paths.slice(i, i + 100));
+    if (cleanup.error) manufacturers$.error.set('Manufacturer deleted, but some PDF files need cleanup: ' + cleanup.error.message);
+  }
+  if (manufacturer.data?.logo_path) {
+    const cleanup = await supabase.storage.from('manufacturer-logos').remove([manufacturer.data.logo_path]);
+    if (cleanup.error) manufacturers$.error.set('Manufacturer deleted, but its logo needs cleanup: ' + cleanup.error.message);
+  }
   return true;
 }
