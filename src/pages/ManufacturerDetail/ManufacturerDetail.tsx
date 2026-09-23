@@ -35,12 +35,6 @@ const emptyProfile: Profile = {
 };
 
 function optional(value: string | null): string { return value ?? ''; }
-function roleLabel(role: string | null): string {
-  return role === 'technical_support' ? 'Technical support' :
-    role === 'main_website' ? 'Main website' :
-    role === 'external_manuals' ? 'External manuals' : '';
-}
-
 export function ManufacturerDetailPage() {
   const { id } = useParams<{ id: string }>();
   const local$ = useObservable({
@@ -66,6 +60,7 @@ export function ManufacturerDetailPage() {
   const error = useValue(local$.error);
   const success = useValue(local$.success);
   const logoFile = useRef<File | null>(null);
+  const previousLogo = useRef<string | null>(null);
   const logoInput = useRef<HTMLInputElement | null>(null);
   const dragId = useRef<string | null>(null);
 
@@ -89,6 +84,7 @@ export function ManufacturerDetailPage() {
         local$.error.set(failure?.message ?? 'Manufacturer not found');
       } else {
         const m = manufacturer.data;
+        previousLogo.current = m.logo_path;
         local$.profile.set({
           name: m.name, description: optional(m.description), logo_path: m.logo_path,
           search_keywords: m.search_keywords, published: m.published,
@@ -201,9 +197,10 @@ export function ManufacturerDetailPage() {
         p_category_ids: local$.selectedCategories.get(),
       });
       if (result.error) throw result.error;
-      if (uploadedPath && draft.logo_path && draft.logo_path !== uploadedPath) {
-        await supabase.storage.from('manufacturer-logos').remove([draft.logo_path]);
+      if (previousLogo.current && previousLogo.current !== logoPath) {
+        await supabase.storage.from('manufacturer-logos').remove([previousLogo.current]);
       }
+      previousLogo.current = logoPath;
       local$.profile.set({
         ...draft, logo_path: logoPath,
         search_keywords: local$.keywordText.get().split(',').map((s) => s.trim()).filter(Boolean),
