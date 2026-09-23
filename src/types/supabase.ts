@@ -10,10 +10,25 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
+      directory_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       manual_variants: {
         Row: {
           manual_id: string
@@ -107,21 +122,156 @@ export type Database = {
           },
         ]
       }
-      manufacturers: {
+      manufacturer_categories: {
         Row: {
-          created_at: string
-          id: string
-          name: string
+          category_id: string
+          manufacturer_id: string
         }
         Insert: {
-          created_at?: string
-          id?: string
-          name: string
+          category_id: string
+          manufacturer_id: string
         }
         Update: {
+          category_id?: string
+          manufacturer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manufacturer_categories_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "product_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manufacturer_categories_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "manual_details"
+            referencedColumns: ["manufacturer_id"]
+          },
+          {
+            foreignKeyName: "manufacturer_categories_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manufacturer_categories_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "variant_details"
+            referencedColumns: ["manufacturer_id"]
+          },
+        ]
+      }
+      manufacturer_contacts: {
+        Row: {
+          action_role: string | null
+          created_at: string
+          display_order: number
+          id: string
+          kind: string
+          label: string
+          manufacturer_id: string
+          platform: string | null
+          value: string
+        }
+        Insert: {
+          action_role?: string | null
           created_at?: string
+          display_order?: number
           id?: string
+          kind: string
+          label: string
+          manufacturer_id: string
+          platform?: string | null
+          value: string
+        }
+        Update: {
+          action_role?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          kind?: string
+          label?: string
+          manufacturer_id?: string
+          platform?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "manufacturer_contacts_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "manual_details"
+            referencedColumns: ["manufacturer_id"]
+          },
+          {
+            foreignKeyName: "manufacturer_contacts_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "manufacturers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "manufacturer_contacts_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "variant_details"
+            referencedColumns: ["manufacturer_id"]
+          },
+        ]
+      }
+      manufacturers: {
+        Row: {
+          approved_installer_scheme: string | null
+          created_at: string
+          description: string | null
+          id: string
+          logo_path: string | null
+          name: string
+          notes: string | null
+          published: boolean
+          search_keywords: string[]
+          technical_support_hours: string | null
+          training_available: string | null
+          uk_headquarters: string | null
+          updated_at: string
+          warranty_information: string | null
+        }
+        Insert: {
+          approved_installer_scheme?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_path?: string | null
+          name: string
+          notes?: string | null
+          published?: boolean
+          search_keywords?: string[]
+          technical_support_hours?: string | null
+          training_available?: string | null
+          uk_headquarters?: string | null
+          updated_at?: string
+          warranty_information?: string | null
+        }
+        Update: {
+          approved_installer_scheme?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          logo_path?: string | null
           name?: string
+          notes?: string | null
+          published?: boolean
+          search_keywords?: string[]
+          technical_support_hours?: string | null
+          training_available?: string | null
+          uk_headquarters?: string | null
+          updated_at?: string
+          warranty_information?: string | null
         }
         Relationships: []
       }
@@ -173,6 +323,27 @@ export type Database = {
             referencedColumns: ["manufacturer_id"]
           },
         ]
+      }
+      product_categories: {
+        Row: {
+          display_order: number
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          display_order?: number
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          display_order?: number
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
       }
       variants: {
         Row: {
@@ -258,7 +429,11 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      is_directory_admin: { Args: never; Returns: boolean }
+      recompute_model_types: {
+        Args: { p_model_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       boiler_type: "combi" | "heat_only" | "system"
@@ -278,12 +453,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -307,11 +482,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -332,11 +507,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -357,11 +532,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -374,11 +549,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
