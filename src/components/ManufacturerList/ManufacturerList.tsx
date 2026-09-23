@@ -10,6 +10,8 @@ import {
   deleteManufacturer,
 } from '../../store/manufacturers';
 import { ConfirmDialog } from '../ConfirmDialog';
+import { supabase } from '../../lib/supabase';
+import type { Tables } from '../../types/supabase';
 import styles from './ManufacturerList.module.css';
 
 export function ManufacturerList() {
@@ -22,10 +24,21 @@ export function ManufacturerList() {
     editId: null as string | null,
     editName: '',
     deleteId: null as string | null,
+    filter: '',
+    categoryId: '',
+    categories: [] as Tables<'product_categories'>[],
+    links: [] as Tables<'manufacturer_categories'>[],
   });
 
   useEffect(() => {
     fetchManufacturers();
+    Promise.all([
+      supabase.from('product_categories').select('*').order('display_order'),
+      supabase.from('manufacturer_categories').select('*'),
+    ]).then(([categories, links]) => {
+      local$.categories.set(categories.data ?? []);
+      local$.links.set(links.data ?? []);
+    });
   }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -52,6 +65,16 @@ export function ManufacturerList() {
     local$.deleteId.set(null);
   };
 
+  const filter = useValue(local$.filter).trim().toLocaleLowerCase();
+  const categoryId = useValue(local$.categoryId);
+  const categories = useValue(local$.categories);
+  const links = useValue(local$.links);
+  const visible = items.filter((m) =>
+    (!filter || m.name.toLocaleLowerCase().includes(filter) ||
+      m.search_keywords.some((keyword) => keyword.toLocaleLowerCase().includes(filter))) &&
+    (!categoryId || links.some((link) => link.manufacturer_id === m.id && link.category_id === categoryId))
+  );
+
   return (
     <div>
       <h1 className={styles.heading}>Manufacturers</h1>
@@ -74,21 +97,30 @@ export function ManufacturerList() {
         </$React.button>
       </form>
 
+      <div className={styles.filters}>
+        <$React.input type="search" $value={local$.filter} placeholder="Search names and keywords…" className={styles.input} aria-label="Search manufacturers" />
+        <select value={categoryId} onChange={(e) => local$.categoryId.set(e.target.value)} aria-label="Filter by category" className={styles.input}>
+          <option value="">All categories</option>
+          {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </select>
+      </div>
       {loading && items.length === 0 ? (
         <p className={styles.empty}>Loading...</p>
-      ) : items.length === 0 ? (
-        <p className={styles.empty}>No manufacturers yet. Add one above.</p>
+      ) : visible.length === 0 ? (
+        <p className={styles.empty}>{items.length ? 'No manufacturers match these filters.' : 'No manufacturers yet. Add one above.'}</p>
       ) : (
         <ul className={styles.list}>
-          {items.map((m) => (
+          {visible.map((m) => (
             <li key={m.id} className={styles.item}>
               <Show
                 if={() => local$.editId.get() === m.id}
                 else={() => (
                   <>
-                    <Link to={`/manufacturer/${m.id}`} className={styles.name}>
-                      {m.name}
-                    </Link>
+                    <div className={styles.identity}>
+                      {m.logo_path && <img className={styles.logo} src={supabase.storage.from('manufacturer-logos').getPublicUrl(m.logo_path).data.publicUrl} alt="" />}
+                      <Link to={`/manufacturer/${m.id}`} className={styles.name}>{m.name}</Link>
+                      <span className={m.published ? styles.published : styles.draft}>{m.published ? 'Published' : 'Draft'}</span>
+                    </div>
                     <div className={styles.actions}>
                       <button
                         onClick={() => { local$.editId.set(m.id); local$.editName.set(m.name); }}
