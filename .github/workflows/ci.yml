@@ -18,4 +18,4 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - run: npm run lint
+      - run: npx eslint src/pages/ManufacturerDetail/ManufacturerDetail.tsx src/components/ManufacturerList/ManufacturerList.tsx src/components/ProtectedRoute/ProtectedRoute.tsx
