@@ -143,7 +143,7 @@ export function ManualList({ modelId }: ManualListProps) {
         <p className={styles.empty}>No manuals yet. Upload one above.</p>
       ) : (
         <ul className={styles.list}>
-          {items.map((m: any) => (
+          {items.map((m) => (
             <li key={m.id} className={styles.item}>
               <Show
                 if={() => local$.editId.get() === m.id}
@@ -164,7 +164,7 @@ export function ManualList({ modelId }: ManualListProps) {
                           <span className={styles.covers}>
                             Covers:{' '}
                             {m.manual_variants
-                              .map((mv: any) => mv.variants?.name)
+                              .map((mv) => mv.variants?.name)
                               .filter(Boolean)
                               .join(', ')}
                           </span>
