@@ -24,7 +24,7 @@ export function ModelDetailPage() {
       .eq('id', id)
       .single()
       .then(({ data }) => model$.set(data as ModelWithManufacturer));
-  }, [id]);
+  }, [id, model$]);
 
   if (!id) return null;
 

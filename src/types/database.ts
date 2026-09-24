@@ -34,7 +34,7 @@ export interface ModelWithRelations extends Model {
 }
 
 export interface ManualWithVariants extends Manual {
-  manual_variants?: { variant_id: string; variants: Variant }[];
+  manual_variants: { variant_id: string; variants: Pick<Variant, 'id' | 'name' | 'gc_number'> | null }[];
 }
 
 export interface ManufacturerWithModels extends Manufacturer {

@@ -40,7 +40,7 @@ export function ManufacturerList() {
       local$.categories.set(categories.data ?? []);
       local$.links.set(links.data ?? []);
     });
-  }, []);
+  }, [local$.categories, local$.links]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();

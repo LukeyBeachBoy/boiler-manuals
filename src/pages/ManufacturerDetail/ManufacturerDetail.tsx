@@ -106,7 +106,8 @@ export function ManufacturerDetailPage() {
       local$.loading.set(false);
     });
     return () => { active = false; };
-  }, [id]);
+  }, [id, local$.categories, local$.contacts, local$.error, local$.hasManuals,
+    local$.keywordText, local$.loading, local$.profile, local$.selectedCategories]);
 
   if (!id) return null;
 

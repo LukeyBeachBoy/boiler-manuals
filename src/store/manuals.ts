@@ -1,9 +1,9 @@
 import { observable } from '@legendapp/state';
 import { supabase } from '../lib/supabase';
-import type { Manual } from '../types/database';
+import type { Manual, ManualWithVariants } from '../types/database';
 
 interface ManualsState {
-  items: Manual[];
+  items: ManualWithVariants[];
   loading: boolean;
   uploading: boolean;
   error: string | null;

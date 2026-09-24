@@ -15,11 +15,7 @@ export function SearchAutocomplete() {
   // Debounced fetch on value change.
   useEffect(() => {
     const q = value.trim();
-    if (!q) {
-      setItems([]);
-      setOpen(false);
-      return;
-    }
+    if (!q) return;
     const id = ++reqId.current;
     const t = setTimeout(async () => {
       const results = await autocompleteSearch(q);
@@ -43,6 +39,8 @@ export function SearchAutocomplete() {
   }, []);
 
   const go = (item: AutocompleteItem) => {
+    reqId.current++;
+    setItems([]);
     setOpen(false);
     setValue('');
     navigate(item.to);
@@ -83,7 +81,16 @@ export function SearchAutocomplete() {
         aria-autocomplete="list"
         aria-activedescendant={active >= 0 && items[active] ? `ac-${items[active].key}` : undefined}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => {
+          const next = e.target.value;
+          setValue(next);
+          if (!next.trim()) {
+            reqId.current++;
+            setItems([]);
+            setOpen(false);
+            setActive(-1);
+          }
+        }}
         onKeyDown={onKeyDown}
         onFocus={() => { if (items.length) setOpen(true); }}
         placeholder="Search manufacturers, models, GC numbers..."

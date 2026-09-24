@@ -21,7 +21,7 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       access$.checking.set(false);
     });
     return () => { active = false; };
-  }, [user?.id]);
+  }, [user, access$.allowed, access$.checking, access$.userId]);
 
   if (loading) return <div style={{ padding: 32, textAlign: 'center' }}>Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
